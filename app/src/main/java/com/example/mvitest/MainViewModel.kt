@@ -1,7 +1,6 @@
 package com.example.mvitest
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.withTimeout
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
 import org.orbitmvi.orbit.syntax.simple.postSideEffect
@@ -33,8 +32,6 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
             }
         }
     }
-
-
 }
 
 fun Int.doOperation(operator: Char, x: Int) =
