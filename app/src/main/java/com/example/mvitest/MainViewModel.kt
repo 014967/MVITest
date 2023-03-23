@@ -1,6 +1,10 @@
 package com.example.mvitest
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
 import org.orbitmvi.orbit.syntax.simple.postSideEffect
@@ -26,24 +30,81 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
 
     fun buttonClick(input: Char) = intent {
         val parseValue = Character.getNumericValue(input)
-        postSideEffect(CalculatorSideEffect.Toast("$input 이 눌렸습니다"))
         if (parseValue in 0..9) {
-            reduce {
-                state.copy(formula = state.formula + input)
+            /*
+            숫자일경우 계산식에 넣고, 결과값 계산
+             */
+            viewModelScope.launch(Dispatchers.Default) {
+                val postFixList = infixToPostFix(state.formula + input)
+                val result = calculate(postFixList)
+                reduce {
+                    state.copy(formula = state.formula + input, total = result)
+                }
             }
         } else {
-            reduce {
-                when (input) {
-                    'C' -> {
+            /*
+            숫자를 누르기전에 연산자부터 누를경우 토스트 발생
+             */
+            if (state.formula.isEmpty()) {
+                postSideEffect(CalculatorSideEffect.Toast("먼저 숫자를 눌러주세요"))
+                return@intent
+            }
+            when (input) {
+                'C' -> {
+                    /*
+                    계산식과 결과 모두 지운다.
+                     */
+                    reduce {
                         state.copy(total = 0, lastInput = ' ', formula = "")
                     }
-                    '=' -> {
+                }
+                '=' -> {
+                    /*
+                    formula(계산식)으로 결과값 계산하기
+                    중위 표현식을 후위표현식으로 바꾸고 결과값 계산
+                     */
+                    viewModelScope.launch(Dispatchers.Default) {
                         val postFixList = infixToPostFix(state.formula)
                         val result = calculate(postFixList)
-
-                        state.copy(total = result, formula = result.toString())
+                        reduce {
+                            state.copy(total = result, formula = result.toString())
+                        }
                     }
-                    else -> {
+                }
+                '<' -> {
+                    viewModelScope.launch(Dispatchers.Default) {
+                        if (state.formula.last() in listOf('-', '+', '*', '/', '%')) {
+                            /*
+                            연산자라면 지우기
+                             */
+                            reduce {
+                                val removedFormula = state.formula.dropLast(1)
+                                state.copy(formula = removedFormula)
+                            }
+                        } else {
+                            /*
+                            연산자가 아닌 숫자라면, 지우고 String이 비어있지 않다면, 결과값 다시 계산
+                             */
+                            val removedFormula = state.formula.dropLast(1)
+                            if (removedFormula.isNotEmpty()) {
+                                val postFixList = infixToPostFix(removedFormula)
+                                val result = calculate(postFixList)
+                                reduce {
+                                    state.copy(formula = removedFormula, total = result)
+                                }
+                            } else {
+                                reduce {
+                                    state.copy(formula = "", total = 0)
+                                }
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    reduce {
+                        /*
+                        연산자를 더한다.
+                         */
                         state.copy(formula = state.formula + input, total = 0)
                     }
                 }
@@ -51,7 +112,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
         }
     }
 
-    fun infixToPostFix(formular: String): ArrayList<String> {
+    suspend fun infixToPostFix(formular: String): ArrayList<String> = withContext(Dispatchers.Default) {
         val newFormular = StringBuilder()
         for (i in formular) {
             if (i in listOf('-', '+', '*', '/', '%')) {
@@ -77,11 +138,11 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
         while (stack.isNotEmpty()) {
             postFixList.add(stack.pop())
         }
-        return postFixList
+        return@withContext postFixList
     }
 }
 
-fun calculate(postFixList: ArrayList<String>): Int {
+suspend fun calculate(postFixList: ArrayList<String>): Int = withContext(Dispatchers.Default) {
     val stack = Stack<Int>()
     for (i in postFixList) {
         if (i in listOf("*", "-", "+", "/", "%")) {
@@ -104,11 +165,12 @@ fun calculate(postFixList: ArrayList<String>): Int {
                     stack.add(b % a)
                 }
             }
+        } else if (i == "<") {
         } else {
             stack.add(i.toInt())
         }
     }
-    return stack.pop()
+    return@withContext stack.pop()
 }
 
 fun getPriority(operatorMap: HashMap<String, Int>, op1: String, op2: String): Boolean {
