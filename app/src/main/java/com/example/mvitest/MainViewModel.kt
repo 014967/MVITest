@@ -34,7 +34,8 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
             /*
             숫자일경우 계산식에 넣고, 결과값 계산
              */
-            viewModelScope.launch(Dispatchers.Default) {
+            viewModelScope.launch {
+                println("viewModelScope launch ${Thread.currentThread().name}")
                 val postFixList = infixToPostFix(state.formula + input)
                 val result = calculate(postFixList)
                 reduce {
@@ -63,7 +64,8 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
                     formula(계산식)으로 결과값 계산하기
                     중위 표현식을 후위표현식으로 바꾸고 결과값 계산
                      */
-                    viewModelScope.launch(Dispatchers.Default) {
+                    viewModelScope.launch {
+                        println("viewModelScope launch ${Thread.currentThread().name}")
                         val postFixList = infixToPostFix(state.formula)
                         val result = calculate(postFixList)
                         reduce {
@@ -72,7 +74,8 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
                     }
                 }
                 '<' -> {
-                    viewModelScope.launch(Dispatchers.Default) {
+                    viewModelScope.launch {
+                        println("viewModelScope launch ${Thread.currentThread().name}")
                         if (state.formula.last() in listOf('-', '+', '*', '/', '%')) {
                             /*
                             연산자라면 지우기
@@ -113,6 +116,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
     }
 
     suspend fun infixToPostFix(formular: String): ArrayList<String> = withContext(Dispatchers.Default) {
+        println("infix threadName ${Thread.currentThread().name}")
         val newFormular = StringBuilder()
         for (i in formular) {
             if (i in listOf('-', '+', '*', '/', '%')) {
@@ -143,6 +147,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
 }
 
 suspend fun calculate(postFixList: ArrayList<String>): Int = withContext(Dispatchers.Default) {
+    println("calculate threadName ${Thread.currentThread().name}")
     val stack = Stack<Int>()
     for (i in postFixList) {
         if (i in listOf("*", "-", "+", "/", "%")) {
