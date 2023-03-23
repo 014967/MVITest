@@ -16,7 +16,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, CalculatorSideEffect>, ViewModel() {
     override val container = container<CalculatorState, CalculatorSideEffect>(CalculatorState())
 
-    val operatorMap = HashMap<String, Int>().apply {
+    private val operatorMap = HashMap<String, Int>().apply {
         put("*", 3)
         put("/", 3)
         put("+", 2)
@@ -32,14 +32,18 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
             }
         } else {
             reduce {
-                if (input == 'C') {
-                    state.copy(total = 0, lastInput = ' ', formula = "")
-                } else if (input == '=') {
-                    val postFixList = infixToPostFix(state.formula)
-                    val result = calculate(postFixList)
-                    state.copy(total = result, formula = result.toString())
-                } else {
-                    state.copy(formula = state.formula + input, total = 0)
+                when (input) {
+                    'C' -> {
+                        state.copy(total = 0, lastInput = ' ', formula = "")
+                    }
+                    '=' -> {
+                        val postFixList = infixToPostFix(state.formula)
+                        val result = calculate(postFixList)
+                        state.copy(total = result, formula = result.toString())
+                    }
+                    else -> {
+                        state.copy(formula = state.formula + input, total = 0)
+                    }
                 }
             }
         }
@@ -86,13 +90,13 @@ fun calculate(postFixList: ArrayList<String>): Int {
                     stack.add(a * b)
                 }
                 "-" -> {
-                    stack.add(b-a)
+                    stack.add(b - a)
                 }
                 "+" -> {
                     stack.add(a + b)
                 }
                 "/" -> {
-                    stack.add(b/a)
+                    stack.add(b / a)
                 }
             }
         } else {
