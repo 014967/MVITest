@@ -22,11 +22,13 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mvitest.ui.theme.MVITestTheme
@@ -47,7 +49,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MVITestTheme {
-                val state = mainViewModel.container.stateFlow.collectAsState()
+                val state by mainViewModel.container.stateFlow.collectAsState()
                 val context = LocalContext.current
                 mainViewModel.collectSideEffect {
                     handleSideEffect(context, it)
@@ -56,15 +58,13 @@ class MainActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                        horizontalAlignment = Alignment.End
                     ) {
-                        Text(
-                            text = state.value.total.toString(),
-                            fontSize = 100.sp
-                        )
+                        FormularText(formular = state.formula, fontSize = 75.sp)
                         Spacer(modifier = Modifier.width(10.dp))
+                        ResultText(result = state.total.toString(), fontSize = 50.sp)
                     }
 
                     Calculator(config = calCulatorConfig.toImmutableList(), onButtonClick = mainViewModel::buttonClick)
@@ -78,6 +78,22 @@ private fun handleSideEffect(context: Context, sideEffect: CalculatorSideEffect)
     when (sideEffect) {
         is CalculatorSideEffect.Toast -> Toast.makeText(context, sideEffect.text, Toast.LENGTH_SHORT).show()
     }
+}
+
+@Composable
+fun FormularText(formular: String, fontSize: TextUnit) {
+    Text(
+        text = formular,
+        fontSize = fontSize
+    )
+}
+
+@Composable
+fun ResultText(result: String, fontSize: TextUnit) {
+    Text(
+        text = if (result == "0") "" else result,
+        fontSize = fontSize
+    )
 }
 
 @Composable
