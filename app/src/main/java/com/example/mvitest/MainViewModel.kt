@@ -25,8 +25,8 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
     }
 
     fun buttonClick(input: Char) = intent {
-        postSideEffect(CalculatorSideEffect.Toast("Adding $input to ${state.total}"))
         val parseValue = Character.getNumericValue(input)
+        postSideEffect(CalculatorSideEffect.Toast("$input 이 눌렸습니다"))
         if (parseValue in 0..9) {
             reduce {
                 state.copy(formula = state.formula + input)
@@ -40,6 +40,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
                     '=' -> {
                         val postFixList = infixToPostFix(state.formula)
                         val result = calculate(postFixList)
+
                         state.copy(total = result, formula = result.toString())
                     }
                     else -> {
