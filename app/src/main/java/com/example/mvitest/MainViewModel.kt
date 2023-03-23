@@ -1,9 +1,7 @@
 package com.example.mvitest
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -34,12 +32,10 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
             /*
             숫자일경우 계산식에 넣고, 결과값 계산
              */
-            viewModelScope.launch {
-                val postFixList = infixToPostFix(state.formula + input)
-                val result = calculate(postFixList)
-                reduce {
-                    state.copy(formula = state.formula + input, total = result)
-                }
+            val postFixList = infixToPostFix(state.formula + input)
+            val result = calculate(postFixList)
+            reduce {
+                state.copy(formula = state.formula + input, total = result)
             }
         } else {
             /*
@@ -63,39 +59,35 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
                     formula(계산식)으로 결과값 계산하기
                     중위 표현식을 후위표현식으로 바꾸고 결과값 계산
                      */
-                    viewModelScope.launch {
-                        val postFixList = infixToPostFix(state.formula)
-                        val result = calculate(postFixList)
-                        reduce {
-                            state.copy(total = result, formula = result.toString())
-                        }
+                    val postFixList = infixToPostFix(state.formula)
+                    val result = calculate(postFixList)
+                    reduce {
+                        state.copy(total = result, formula = result.toString())
                     }
                 }
                 '<' -> {
-                    viewModelScope.launch {
-                        if (state.formula.last() in listOf('-', '+', '*', '/', '%')) {
+                    if (state.formula.last() in listOf('-', '+', '*', '/', '%')) {
                             /*
                             연산자라면 지우기
                              */
-                            reduce {
-                                val removedFormula = state.formula.dropLast(1)
-                                state.copy(formula = removedFormula)
-                            }
-                        } else {
+                        val removedFormula = state.formula.dropLast(1)
+                        reduce {
+                            state.copy(formula = removedFormula)
+                        }
+                    } else {
                             /*
                             연산자가 아닌 숫자라면, 지우고 String이 비어있지 않다면, 결과값 다시 계산
                              */
-                            val removedFormula = state.formula.dropLast(1)
-                            if (removedFormula.isNotEmpty()) {
-                                val postFixList = infixToPostFix(removedFormula)
-                                val result = calculate(postFixList)
-                                reduce {
-                                    state.copy(formula = removedFormula, total = result)
-                                }
-                            } else {
-                                reduce {
-                                    state.copy(formula = "", total = 0)
-                                }
+                        val removedFormula = state.formula.dropLast(1)
+                        if (removedFormula.isNotEmpty()) {
+                            val postFixList = infixToPostFix(removedFormula)
+                            val result = calculate(postFixList)
+                            reduce {
+                                state.copy(formula = removedFormula, total = result)
+                            }
+                        } else {
+                            reduce {
+                                state.copy(formula = "", total = 0)
                             }
                         }
                     }

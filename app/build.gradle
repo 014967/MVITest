@@ -62,7 +62,6 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
 
-    implementation("org.orbit-mvi:orbit-core:4.6.1")
     implementation("org.orbit-mvi:orbit-compose:4.6.1")
     implementation("org.orbit-mvi:orbit-viewmodel:4.6.1")
     testImplementation("org.orbit-mvi:orbit-test:4.6.1")

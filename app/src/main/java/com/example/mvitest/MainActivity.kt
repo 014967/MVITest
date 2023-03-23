@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MVITestTheme {
                 val state by mainViewModel.container.stateFlow.collectAsState()
+
                 val context = LocalContext.current
                 mainViewModel.collectSideEffect {
                     handleSideEffect(context, it)
