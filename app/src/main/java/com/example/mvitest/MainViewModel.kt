@@ -19,6 +19,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
     private val operatorMap = HashMap<String, Int>().apply {
         put("*", 3)
         put("/", 3)
+        put("%", 3)
         put("+", 2)
         put("-", 2)
     }
@@ -52,7 +53,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
     fun infixToPostFix(formular: String): ArrayList<String> {
         val newFormular = StringBuilder()
         for (i in formular) {
-            if (i in listOf('-', '+', '*', '/')) {
+            if (i in listOf('-', '+', '*', '/', '%')) {
                 newFormular.append(" $i ")
             } else {
                 newFormular.append(i)
@@ -62,7 +63,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
         val stack = Stack<String>()
         val postFixList = arrayListOf<String>()
         for (i in newFormular.split(" ")) {
-            if (i in listOf("-", "+", "*", "/")) {
+            if (i in listOf("-", "+", "*", "/", "%")) {
                 while (stack.isNotEmpty() && getPriority(operatorMap, stack.peek().toString(), i)) {
                     postFixList.add(stack.pop().toString())
                 }
@@ -82,7 +83,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
 fun calculate(postFixList: ArrayList<String>): Int {
     val stack = Stack<Int>()
     for (i in postFixList) {
-        if (i in listOf("*", "-", "+", "/")) {
+        if (i in listOf("*", "-", "+", "/", "%")) {
             val a = stack.pop()
             val b = stack.pop()
             when (i) {
@@ -97,6 +98,9 @@ fun calculate(postFixList: ArrayList<String>): Int {
                 }
                 "/" -> {
                     stack.add(b / a)
+                }
+                "%" -> {
+                    stack.add(b % a)
                 }
             }
         } else {
