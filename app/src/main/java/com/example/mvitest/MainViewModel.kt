@@ -55,7 +55,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
                     계산식과 결과 모두 지운다.
                      */
                     reduce {
-                        state.copy(total = 0, lastInput = ' ', formula = "")
+                        state.copy(total = 0, formula = "")
                     }
                 }
                 '=' -> {

@@ -7,5 +7,4 @@ package com.example.mvitest
 data class CalculatorState(
     val formula: String = "",
     val total: Int = 0,
-    val lastInput: Char = ' '
 )
