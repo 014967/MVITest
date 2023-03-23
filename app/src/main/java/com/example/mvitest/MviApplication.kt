@@ -8,6 +8,6 @@ import android.app.Application
 class MviApplication : Application() {
 
     val appComponent: AppComponent by lazy {
-        DaggerAppComponent.factory().create(applicationContext)
+        DaggerAppComponent.factory().create()
     }
 }

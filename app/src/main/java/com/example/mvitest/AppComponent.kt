@@ -1,7 +1,5 @@
 package com.example.mvitest
 
-import android.content.Context
-import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Singleton
 
@@ -15,7 +13,7 @@ interface AppComponent {
 
     @Component.Factory
     interface Factory {
-        fun create(@BindsInstance context: Context): AppComponent
+        fun create(): AppComponent
     }
     fun inject(activity: MainActivity)
 }
