@@ -2,12 +2,9 @@ package com.example.mvitest
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.syntax.simple.intent
-import org.orbitmvi.orbit.syntax.simple.postSideEffect
-import org.orbitmvi.orbit.syntax.simple.reduce
-import org.orbitmvi.orbit.viewmodel.container
 import java.util.Stack
 import javax.inject.Inject
 
@@ -15,8 +12,9 @@ import javax.inject.Inject
  * @Created by 김현국 2023/03/22
  */
 
-class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, CalculatorSideEffect>, ViewModel() {
-    override val container = container<CalculatorState, CalculatorSideEffect>(CalculatorState())
+class MainViewModel @Inject constructor() : ViewModel() {
+    private val _container: MutableStateFlow<CalculatorState> = MutableStateFlow(CalculatorState())
+    val container = _container.asStateFlow()
 
     private val operatorMap = HashMap<String, Int>().apply {
         put("*", 3)
@@ -25,84 +23,7 @@ class MainViewModel @Inject constructor() : ContainerHost<CalculatorState, Calcu
         put("+", 2)
         put("-", 2)
     }
-
-    fun buttonClick(input: Char) = intent {
-        val parseValue = Character.getNumericValue(input)
-        if (parseValue in 0..9) {
-            /*
-            숫자일경우 계산식에 넣고, 결과값 계산
-             */
-            val postFixList = infixToPostFix(state.formula + input)
-            val result = calculate(postFixList)
-            reduce {
-                state.copy(formula = state.formula + input, total = result)
-            }
-        } else {
-            /*
-            숫자를 누르기전에 연산자부터 누를경우 토스트 발생
-             */
-            if (state.formula.isEmpty()) {
-                postSideEffect(CalculatorSideEffect.Toast("먼저 숫자를 눌러주세요"))
-                return@intent
-            }
-            when (input) {
-                'C' -> {
-                    /*
-                    계산식과 결과 모두 지운다.
-                     */
-                    reduce {
-                        state.copy(total = 0, formula = "")
-                    }
-                }
-                '=' -> {
-                    /*
-                    formula(계산식)으로 결과값 계산하기
-                    중위 표현식을 후위표현식으로 바꾸고 결과값 계산
-                     */
-                    val postFixList = infixToPostFix(state.formula)
-                    val result = calculate(postFixList)
-                    reduce {
-                        state.copy(total = result, formula = result.toString())
-                    }
-                }
-                '<' -> {
-                    if (state.formula.last() in listOf('-', '+', '*', '/', '%')) {
-                            /*
-                            연산자라면 지우기
-                             */
-                        val removedFormula = state.formula.dropLast(1)
-                        reduce {
-                            state.copy(formula = removedFormula)
-                        }
-                    } else {
-                            /*
-                            연산자가 아닌 숫자라면, 지우고 String이 비어있지 않다면, 결과값 다시 계산
-                             */
-                        val removedFormula = state.formula.dropLast(1)
-                        if (removedFormula.isNotEmpty()) {
-                            val postFixList = infixToPostFix(removedFormula)
-                            val result = calculate(postFixList)
-                            reduce {
-                                state.copy(formula = removedFormula, total = result)
-                            }
-                        } else {
-                            reduce {
-                                state.copy(formula = "", total = 0)
-                            }
-                        }
-                    }
-                }
-                else -> {
-                    reduce {
-                        /*
-                        연산자를 더한다.
-                         */
-                        state.copy(formula = state.formula + input, total = 0)
-                    }
-                }
-            }
-        }
-    }
+    
 
     suspend fun infixToPostFix(formular: String): ArrayList<String> = withContext(Dispatchers.Default) {
         val newFormular = StringBuilder()

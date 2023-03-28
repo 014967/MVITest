@@ -34,8 +34,6 @@ import androidx.compose.ui.unit.sp
 import com.example.mvitest.ui.theme.MVITestTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import org.orbitmvi.orbit.compose.collectAsState
-import org.orbitmvi.orbit.compose.collectSideEffect
 import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
@@ -49,26 +47,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MVITestTheme {
-                val state by mainViewModel.container.stateFlow.collectAsState()
+                val state by mainViewModel.container.collectAsState()
 
                 val context = LocalContext.current
-                mainViewModel.collectSideEffect {
-                    handleSideEffect(context, it)
-                }
 
                 Column(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.End
+                        horizontalAlignment = Alignment.End,
                     ) {
                         FormularText(formular = state.formula, fontSize = 75.sp)
                         Spacer(modifier = Modifier.width(10.dp))
                         ResultText(result = state.total.toString(), fontSize = 50.sp)
                     }
 
-                    Calculator(config = calCulatorConfig.toImmutableList(), onButtonClick = mainViewModel::buttonClick)
+                    Calculator(config = calCulatorConfig.toImmutableList(), onButtonClick = {})
                 }
             }
         }
@@ -85,7 +80,7 @@ private fun handleSideEffect(context: Context, sideEffect: CalculatorSideEffect)
 fun FormularText(formular: String, fontSize: TextUnit) {
     Text(
         text = formular,
-        fontSize = fontSize
+        fontSize = fontSize,
     )
 }
 
@@ -93,7 +88,7 @@ fun FormularText(formular: String, fontSize: TextUnit) {
 fun ResultText(result: String, fontSize: TextUnit) {
     Text(
         text = if (result == "0") "" else result,
-        fontSize = fontSize
+        fontSize = fontSize,
     )
 }
 
@@ -101,14 +96,14 @@ fun ResultText(result: String, fontSize: TextUnit) {
 fun Calculator(
     modifier: Modifier = Modifier,
     config: ImmutableList<Char>,
-    onButtonClick: (Char) -> Unit
+    onButtonClick: (Char) -> Unit,
 ) {
     LazyVerticalGrid(
         modifier = modifier,
         columns = GridCells.Fixed(4),
         userScrollEnabled = false,
         verticalArrangement = Arrangement.SpaceBetween,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         items(config) {
             if (it != ' ') {
@@ -122,16 +117,16 @@ fun Calculator(
 fun CircleButton(config: Char, onButtonClick: (Char) -> Unit) {
     Row(
         modifier = Modifier.size(100.dp).clip(
-            CircleShape
+            CircleShape,
         ).clickable {
             onButtonClick(config)
         },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
     ) {
         Text(
             text = config.toString(),
-            fontSize = 50.sp
+            fontSize = 50.sp,
         )
     }
 }
@@ -142,7 +137,7 @@ fun PreviewCalCulator() {
     MaterialTheme() {
         Calculator(
             modifier = Modifier.fillMaxSize(),
-            config = calCulatorConfig.toImmutableList()
+            config = calCulatorConfig.toImmutableList(),
         ) {}
 //
     }
@@ -152,5 +147,5 @@ val calCulatorConfig = listOf(
     '7', '8', '9', '*',
     '4', '5', '6', '-',
     '1', '2', '3', '+',
-    ' ', '0', ' ', '='
+    ' ', '0', ' ', '=',
 )
