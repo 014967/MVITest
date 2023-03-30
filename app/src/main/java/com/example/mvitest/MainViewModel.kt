@@ -107,9 +107,15 @@ class MainViewModel @Inject constructor() : Model<CalculateState, CalculateSideE
     }
 
     private suspend fun numberButtonClick(number: Int) = with(_state.value) {
-        val postFixList = infixToPostFix(formular + number)
-        val result = calculate(postFixList)
-        _state.value = copy(formular = formular + number, result = result)
+        if (formular.length == 1 && formular == "0" && number == 0) {
+            return
+        } else if (formular.length == 1 && number != 0) {
+            _state.value = copy(formular = number.toString(), result = number)
+        } else {
+            val postFixList = infixToPostFix(formular + number)
+            val result = calculate(postFixList)
+            _state.value = copy(formular = formular + number, result = result)
+        }
     }
 
     private fun operatorButtonClick(operator: Char) = with(_state.value) {
