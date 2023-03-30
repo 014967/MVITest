@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.example.mvitest.ui.theme.MVITestTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.consumeAsFlow
 import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
@@ -47,9 +49,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MVITestTheme {
-                val state by mainViewModel.container.collectAsState()
+                val state by mainViewModel.state.collectAsState()
 
                 val context = LocalContext.current
+
+                val sideEffect = mainViewModel.sideEffect.consumeAsFlow()
+                LaunchedEffect(true) {
+                    sideEffect.collect { sideEffect ->
+                        handleSideEffect(context, sideEffect)
+                    }
+                }
 
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -58,21 +67,21 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.End,
                     ) {
-                        FormularText(formular = state.formula, fontSize = 75.sp)
+                        FormularText(formular = state.formular, fontSize = 75.sp)
                         Spacer(modifier = Modifier.width(10.dp))
-                        ResultText(result = state.total.toString(), fontSize = 50.sp)
+                        ResultText(result = state.result.toString(), fontSize = 50.sp)
                     }
 
-                    Calculator(config = calCulatorConfig.toImmutableList(), onButtonClick = {})
+                    Calculator(config = calCulatorConfig.toImmutableList(), onButtonClick = mainViewModel::buttonClick)
                 }
             }
         }
     }
 }
 
-private fun handleSideEffect(context: Context, sideEffect: CalculatorSideEffect) {
+private fun handleSideEffect(context: Context, sideEffect: CalculateSideEffect) {
     when (sideEffect) {
-        is CalculatorSideEffect.Toast -> Toast.makeText(context, sideEffect.text, Toast.LENGTH_SHORT).show()
+        is CalculateSideEffect.ShowToast -> Toast.makeText(context, sideEffect.text, Toast.LENGTH_SHORT).show()
     }
 }
 
